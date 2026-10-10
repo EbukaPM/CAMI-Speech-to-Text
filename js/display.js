@@ -76,8 +76,30 @@
       captionEl.style.height = "100%";
       captionEl.style.justifyContent = "center";
       captionEl.style.maxHeight = "100vh";
-      captionEl.style.padding = "0 4%";
+      // Small, fixed breathing room top and bottom so text never touches
+      // the very edge of the screen.
+      captionEl.style.padding = "1.5cm 4% 2cm";
       captionEl.style.background = "transparent";
+    }
+
+    fitTextToContainer();
+  }
+
+  // Guarantees every caption line is always fully visible — never clipped
+  // by the container's fixed height. Starts from the operator's chosen
+  // font size and only shrinks as far as actually needed to fit whatever
+  // is currently on screen, growing back the moment there's room again
+  // (e.g. right after a Clear & Restart drops most lines).
+  function fitTextToContainer() {
+    const minFontSize = 16;
+    let fontSize = settings.fontSize;
+    captionEl.style.fontSize = fontSize + "px";
+
+    let guard = 0;
+    while (captionEl.scrollHeight > captionEl.clientHeight && fontSize > minFontSize && guard < 40) {
+      fontSize = Math.max(minFontSize, Math.floor(fontSize * 0.95));
+      captionEl.style.fontSize = fontSize + "px";
+      guard++;
     }
   }
 
@@ -96,6 +118,7 @@
       durationMs: settings.scrollSpeedMs
     });
     emptyHint.style.display = hasText ? "none" : "flex";
+    fitTextToContainer();
   }
 
   bus.on((msg) => {
