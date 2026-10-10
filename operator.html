@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CAMI Captions — Operator</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="console">
+    <div class="sidebar">
+      <h1><img class="header-logo" src="assets/cami-logo.png" alt="CAMI logo" /> CAMI Operator <span class="dot" id="liveDot"></span></h1>
+
+      <div id="unsupportedBanner" class="not-supported" style="display:none;">
+        Your browser doesn't support live speech recognition. Please use
+        <b>Google Chrome</b> or <b>Microsoft Edge</b> on this computer.
+      </div>
+
+      <button id="toggleBtn" class="btn-main">Start Listening</button>
+      <p class="hint" id="micHint">Grant microphone access when prompted. Keep this tab open and connected to the internet while in use.</p>
+
+      <div class="group">
+        <h3>Profanity Filter</h3>
+        <div class="row">
+          <label for="filterToggle">Auto-censor flagged words</label>
+          <label class="switch">
+            <input type="checkbox" id="filterToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="row">
+          <label for="replacement">Replace with</label>
+          <input type="text" id="replacement" value="****" style="width:100px" />
+        </div>
+        <label style="font-size:0.78rem;color:var(--text-dim);">Extra words to block (comma separated)</label>
+        <textarea id="customWords" placeholder="e.g. jesus christ, godammit"></textarea>
+        <p class="hint">A built-in list of common profanity is always included. Anything matched is replaced before it ever reaches the screen.</p>
+      </div>
+
+      <div class="group">
+        <h3>Display Layout</h3>
+        <div class="radio-group">
+          <label><input type="radio" name="mode" value="full" checked /><span>Full Screen</span></label>
+          <label><input type="radio" name="mode" value="bar" /><span>Bottom Bar</span></label>
+        </div>
+        <div class="row" style="margin-top:12px;">
+          <label for="align">Text align</label>
+          <select id="align">
+            <option value="center">Center</option>
+            <option value="left">Left</option>
+          </select>
+        </div>
+        <div class="row row-stacked">
+          <div class="row-head"><label for="maxLinesFull">Max lines (Full Screen)</label><span class="val" id="maxLinesFullVal">8</span></div>
+          <input type="range" id="maxLinesFull" min="2" max="14" value="8" />
+        </div>
+        <div class="row row-stacked">
+          <div class="row-head"><label for="maxLinesBar">Max lines (Bottom Bar)</label><span class="val" id="maxLinesBarVal">4</span></div>
+          <input type="range" id="maxLinesBar" min="1" max="8" value="4" />
+        </div>
+        <label style="font-size:0.78rem;color:var(--text-dim);display:block;margin-bottom:6px;">When the max is reached</label>
+        <div class="radio-group">
+          <label><input type="radio" name="overflow" value="clear" checked /><span>Clear &amp; Restart</span></label>
+          <label><input type="radio" name="overflow" value="scroll" /><span>Keep Scrolling</span></label>
+        </div>
+        <p class="hint">Clear &amp; Restart wipes the screen and starts again from the top. Keep Scrolling drops the oldest line as each new one arrives, like TV captions.</p>
+        <div class="row row-stacked" style="margin-top:12px;">
+          <div class="row-head"><label for="scrollSpeed">Scroll speed</label><span class="val" id="scrollSpeedVal">Medium</span></div>
+          <input type="range" id="scrollSpeed" min="150" max="1200" step="50" value="450" />
+        </div>
+        <p class="hint">How smoothly lines slide into place as new captions push old ones along.</p>
+      </div>
+
+      <div class="group">
+        <h3>Text Style</h3>
+        <div class="row row-stacked">
+          <div class="row-head"><label for="fontSize">Font size</label><span class="val" id="fontSizeVal">64px</span></div>
+          <input type="range" id="fontSize" min="24" max="140" value="64" />
+        </div>
+        <div class="row">
+          <label for="fontFamily">Font</label>
+          <select id="fontFamily">
+            <option value="'Segoe UI', system-ui, sans-serif">Sans Serif</option>
+            <option value="Georgia, 'Times New Roman', serif">Serif</option>
+            <option value="'Arial Black', sans-serif">Bold Display</option>
+            <option value="'Courier New', monospace">Monospace</option>
+          </select>
+        </div>
+        <div class="row">
+          <label for="textColor">Text color</label>
+          <input type="color" id="textColor" value="#ffffff" />
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Background</h3>
+        <div class="row">
+          <label for="bgColor">Background color</label>
+          <input type="color" id="bgColor" value="#000000" />
+        </div>
+        <div class="row row-stacked">
+          <div class="row-head"><label for="bgOpacity">Opacity</label><span class="val" id="bgOpacityVal">85%</span></div>
+          <input type="range" id="bgOpacity" min="0" max="1" step="0.05" value="0.85" />
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Network</h3>
+        <p class="hint" style="margin-top:0;">This Display Screen can be opened from another computer on the same network — hand this address to vMix (as a Web Browser input) or open it directly on the machine running vMix:</p>
+        <div class="network-url" id="networkUrl">Looking up network address…</div>
+        <p class="hint">The Operator Console works the same way — control it from any laptop on the network while the Display Screen runs wherever vMix picks it up.</p>
+      </div>
+
+      <button id="clearBtn" class="btn-secondary">Clear Display</button>
+    </div>
+
+    <div class="main-area">
+      <div class="top-actions">
+        <span class="preview-label">Live Preview (what the screen shows)</span>
+        <a href="display.html" target="_blank">Open Display Screen ↗</a>
+      </div>
+      <div class="preview" id="previewBox">
+        <div id="previewInner"></div>
+      </div>
+      <div class="status-strip">
+        <span>Status: <b id="statusText">Idle</b></span>
+        <span>Filter: <b id="filterStatusText">On</b></span>
+        <span>Mode: <b id="modeStatusText">Full Screen</b></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/operator.js"></script>
+</body>
+</html>
