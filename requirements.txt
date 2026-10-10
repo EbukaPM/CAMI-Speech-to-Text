@@ -1,0 +1,4 @@
+# CAMI Captions has no external dependencies — server.py only uses the
+# Python standard library. This file exists because Render's Python
+# environment runs `pip install -r requirements.txt` as its default build
+# step regardless, and errors if the file is missing.
