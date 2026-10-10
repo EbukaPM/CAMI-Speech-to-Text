@@ -3,5 +3,5 @@ services:
     name: cami-captions
     env: python
     plan: free
-    buildCommand: ""
+    buildCommand: "echo 'no build needed — stdlib only'"
     startCommand: "python3 server.py"
