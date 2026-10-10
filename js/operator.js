@@ -104,7 +104,11 @@
     const filtered = applyProfanityFilter(text, settings);
     const max = currentMaxLines();
     if (settings.overflowMode === "clear" && lines.length >= max) {
-      lines = [];
+      // Carry the most recent line forward as the start of the new page,
+      // instead of wiping to a blank screen — keeps continuity for anyone
+      // reading instead of a jarring full disappear.
+      const lastLine = lines[lines.length - 1];
+      lines = lastLine ? [lastLine] : [];
     }
     lines.push({ id: nextLineId++, text: filtered });
     if (settings.overflowMode === "scroll" && lines.length > max) {
@@ -115,7 +119,7 @@
   function retrimLines() {
     const max = currentMaxLines();
     if (lines.length > max) {
-      lines = settings.overflowMode === "clear" ? [] : lines.slice(lines.length - max);
+      lines = settings.overflowMode === "clear" ? lines.slice(-1) : lines.slice(lines.length - max);
     }
   }
 
@@ -169,14 +173,36 @@
     els.statusText.textContent = on ? "Listening…" : "Idle";
   }
 
+  let consecutiveNoSpeech = 0;
+
+  function scheduleRestart() {
+    clearTimeout(restartTimer);
+    restartTimer = setTimeout(() => {
+      try {
+        recognition.start();
+      } catch (e) {
+        // The recognition engine sometimes isn't ready immediately after
+        // it just stopped (a known Chrome race) — rather than leaving it
+        // dead silently, keep retrying instead of giving up after one try.
+        scheduleRestart();
+      }
+    }, 300);
+  }
+
   function startRecognition() {
     if (!SpeechRecognition) return;
+    consecutiveNoSpeech = 0;
     recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
+    recognition.onstart = () => {
+      els.statusText.textContent = "Listening…";
+    };
+
     recognition.onresult = (event) => {
+      consecutiveNoSpeech = 0;
       let interimChunk = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
@@ -191,6 +217,16 @@
     };
 
     recognition.onerror = (e) => {
+      if (e.error === "no-speech") {
+        // Normal the first time or two — just means it's gone a few
+        // seconds without hearing anything, and onend below restarts it.
+        // But if it keeps happening, the mic isn't reaching Chrome at all.
+        consecutiveNoSpeech++;
+        els.statusText.textContent = consecutiveNoSpeech === 1
+          ? "Listening… (no speech heard yet)"
+          : `No mic input detected (attempt ${consecutiveNoSpeech}) — check Chrome's mic permission/device`;
+        return;
+      }
       els.statusText.textContent = "Error: " + e.error;
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
         stopRecognition();
@@ -200,9 +236,7 @@
     recognition.onend = () => {
       if (isListening) {
         // Chrome stops recognition periodically; restart automatically.
-        restartTimer = setTimeout(() => {
-          try { recognition.start(); } catch (e) {}
-        }, 250);
+        scheduleRestart();
       }
     };
 
